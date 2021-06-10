@@ -13,7 +13,8 @@ You will also need the following packages, which can be installed in a similar w
 'matplotlib, numpy, pandas, scipy, random'
 
 The model code is in: ProxyModel1.py
-It contains two main classes (ProxyAgent, ProxyModel) defining the behavior of the agents and overall model respectively.
+
+It contains two main classes (ProxyAgent, ProxyModel), defining the behavior of the agents and overall model, respectively.
 Additionally it contains a number of data collector functions to compute model means used by the mesa batch_runner.
 
 To run a family of models load and run eg.: run_ProxyModel_competition.py
