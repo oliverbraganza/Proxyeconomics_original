@@ -54,6 +54,11 @@ def compute_mean_practice(model):
     pr_vals = [agent.practice for agent in model.schedule.agents]
     return np.arctan2(np.mean(np.sin(pr_vals)), np.mean(np.cos(pr_vals)))
 
+def compute_mean_talent(model):
+    """ returns the mean talent across agents """
+    t_vals = [agent.talent for agent in model.schedule.agents]
+    return sum(t_vals)/model.num_agents
+
 
 class ProxyAgent(Agent):
     """
@@ -70,6 +75,7 @@ class ProxyAgent(Agent):
             self.talent = 0.01
         self.effort = 0
         self.proxy = np.cos(self.practice) * self.effort
+        self.previous_step_proxy = 0
         self.goal = np.cos(self.model.goal_angle - self.practice) * self.effort
         self.goal_oc = np.sin(self.practice) * self.effort
         self.goal_scale = self.model.goal_scale
@@ -78,6 +84,7 @@ class ProxyAgent(Agent):
 
     def step(self):
         """ Actions to perform on each time step """
+        self.previous_step_proxy = self.proxy
         self.optimize_effort()
 
     def optimize_effort(self):
@@ -128,6 +135,11 @@ class ProxyAgent(Agent):
             rel_surv_thresh = self.model.competition
             ordered = np.sort(proxies)
             survival_threshold = ordered[int(rel_surv_thresh*len(proxies))-1]
+            
+            ''' survival threshold based on previous-step proxies '''
+            # ps_proxies = list(n.previous_step_proxy for n in agents)
+            # survival_threshold = ordered[int(rel_surv_thresh*len(ps_proxies))-1]
+            
             if self.model.competition > 0:
                 ''' McDermott Prospect '''
                 # prospect = ps * ss.erf((own_proxy-survival_threshold)/survival_uncertainty)
@@ -189,12 +201,13 @@ class ProxyModel(Model):
     def __init__(self,
                  data_collect_interval,
                  width, height,
-                 practice_mutation_rate,
-                 talent_sd, competition,
-                 numAgents, selection_pressure,
-                 angle_agency,
+                 competition,
+                 numAgents, talent_sd,
                  goal_scale,
-                 goal_angle):
+                 goal_angle,
+                 selection_pressure,
+                 practice_mutation_rate,
+                 angle_agency):
         self.data_collect_interval = data_collect_interval
         self.num_agents = numAgents
         self.selection_pressure = selection_pressure
@@ -225,7 +238,8 @@ class ProxyModel(Model):
                                  "mean_goal_oc": compute_mean_goal_oc,
                                  "mean_effort": compute_mean_effort,
                                  "mean_utility": compute_mean_utility,
-                                 "mean_practice": compute_mean_practice},
+                                 "mean_practice": compute_mean_practice,
+                                 "mean_talent": compute_mean_talent},
                 agent_reporters={"Proxy": lambda A: A.proxy,
                                  "Goal": lambda A: A.goal,
                                  "Goal_oc": lambda A: A.goal_oc,
